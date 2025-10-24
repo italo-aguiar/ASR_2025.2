@@ -1,0 +1,9 @@
+Usando o Play with Docker ou uma instalação do Linux Ubuntu no Virtual Box faça as seguintes atividades:
+1) Crie uma conta no DockerHub;
+2) Faça um pull de uma imagem ubuntu;
+3) Crie um container a partir da imagem ubuntu que foi salva e o acesse com as opções -it;
+4) Instale no container o nginx;
+5) Faça o commit desse container de forma a criar uma versão alterada da imagem ubuntu acrescida com o nginx;
+6) Faça um push dessa imagem para a sua conta no Dockerhub;
+Todos esse passos deverão ser evidenciados em um arquivo PDF que será gravado no Github. No google classroom será gravado o link do github.
+Obs: Todos esses passos foram demonstrados em sala de aula, e estão contidos no livro apresentado.
