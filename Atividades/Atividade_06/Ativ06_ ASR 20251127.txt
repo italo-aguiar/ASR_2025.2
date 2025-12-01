@@ -1,0 +1,127 @@
+
+==============================================================================
+:: INSTANCIA 1 ::
+
+# Instalar Samba
+apk add samba samba-common-tools
+
+# Criar diretório compartilhado
+mkdir -p /compartilhado
+echo "Teste do Samba" > /compartilhado/arquivo.txt
+
+# Criar configuração do Samba
+cat > /etc/samba/smb.conf << 'EOF'
+[global]
+   workgroup = WORKGROUP
+   security = user
+   map to guest = Bad User
+   guest account = nobody
+
+[compartilhado]
+   path = /compartilhado
+   browseable = yes
+   writable = yes
+   guest ok = yes
+   read only = no
+   create mask = 0777
+   directory mask = 0777
+EOF
+
+# Definir permissões
+chmod -R 777 /compartilhado
+
+# Iniciar Samba
+smbd -D
+nmbd -D
+
+# Verificar se está rodando
+ps aux | grep smbd
+
+
+==============================================================================
+:: INSTANCIA 2 ::
+
+
+# Na Instância 2
+apk add samba-client cifs-utils
+
+# Testar conexão
+smbclient -L //192.168.0.19 -N
+
+# Montar
+mkdir -p /mnt/samba
+mount -t cifs //192.168.0.19/compartilhado /mnt/samba -o guest,uid=0,gid=0
+
+# Verificar
+ls -la /mnt/samba
+cat /mnt/samba/arquivo.txt
+
+
+#
+
+
+# Primeiro, verificar se consegue listar o compartilhamento
+smbclient -L //192.168.0.19 -N
+
+# Se funcionar, conectar interativamente
+smbclient //192.168.0.19/compartilhado -N
+
+# Dentro do smbclient, você pode usar comandos como:
+# ls          - listar arquivos
+# get arquivo.txt - baixar arquivo
+# put arquivo - enviar arquivo
+# exit        - sair
+
+
+==============================================================================
+:: INSTANCIA 1 ::
+
+
+# Ver o conteúdo do diretório compartilhado
+ls -la /compartilhado
+
+# Ver o conteúdo de um arquivo
+cat /compartilhado/arquivo.txt
+
+
+==============================================================================
+:: INSTANCIA 2 ::
+
+
+# Conectar ao compartilhamento
+smbclient //192.168.0.19/compartilhado -N
+
+# Dentro do smbclient:
+put /etc/hostname teste_do_cliente.txt
+ls
+exit
+
+
+==============================================================================
+:: INSTANCIA 1 ::
+
+ls -la /compartilhado
+cat /compartilhado/teste_do_cliente.txt
+
+
+
+==============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
