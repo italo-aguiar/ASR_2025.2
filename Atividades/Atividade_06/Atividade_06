@@ -1,1 +1,4 @@
+Usar o prompt abaixo para implementar a comunicação entre duas maquinas linux rodando como instancias no Playwith Docker.
+Prompt
+Como um Administrador Linux, crie  um tutorial para criar duas instancias Linux no Play with Docker onde em uma instancia é configurado o Samba Server com uma pasta compartilhada e numa outra instancia é usado um samba Cliente usando linha de comando para acessar o Samba Server.
 
