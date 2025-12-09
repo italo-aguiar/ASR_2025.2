@@ -1,0 +1,31 @@
+docker network create mysql-network
+
+docker run -d \
+  --name mysql-server \
+  --network mysql-network \
+  -e MYSQL_ROOT_PASSWORD=senha123 \
+  -e MYSQL_DATABASE=meu_banco \
+  -p 3306:3306 \
+  mysql:8.0
+
+docker run -d \
+  --name phpmyadmin \
+  --network mysql-network \
+  -e PMA_HOST=mysql-server \
+  -e PMA_PORT=3306 \
+  -p 8080:80 \
+  phpmyadmin:latest
+
+docker ps
+
+
+===
+
+
+docker exec -it mysql-server mysql -u root -p
+
+CREATE USER 'italo'@'%' IDENTIFIED BY 'admin';
+GRANT ALL PRIVILEGES ON *.* TO 'italo'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+EXIT;
+
