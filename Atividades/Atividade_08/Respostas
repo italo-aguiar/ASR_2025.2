@@ -1,0 +1,108 @@
+# Proxy Reverso com NGINX
+
+## Conceitos Principais
+
+**Proxy Reverso** atua como intermediário entre clientes e servidores backend, recebendo requisições e encaminhando para os servidores apropriados.
+
+**Benefícios:**
+- Load balancing (distribuição de carga)
+- Cache de conteúdo
+- SSL/TLS termination
+- Proteção dos servidores backend
+- Compressão e otimização
+
+## Arquivos de Configuração
+
+**Estrutura principal:**
+- `/etc/nginx/nginx.conf` - configuração global
+- `/etc/nginx/sites-available/` - configurações de sites
+- `/etc/nginx/sites-enabled/` - links simbólicos dos sites ativos
+- `/var/log/nginx/` - logs de acesso e erro
+
+## Exemplo de Implementação
+
+```nginx
+# /etc/nginx/sites-available/meu-app
+
+upstream backend_servers {
+    # Load balancing entre múltiplos servidores
+    server 192.168.1.10:3000 weight=3;
+    server 192.168.1.11:3000 weight=2;
+    server 192.168.1.12:3000 backup;
+}
+
+server {
+    listen 80;
+    server_name exemplo.com www.exemplo.com;
+
+    # Logs
+    access_log /var/log/nginx/app-access.log;
+    error_log /var/log/nginx/app-error.log;
+
+    # Headers de proxy
+    location / {
+        proxy_pass http://backend_servers;
+        
+        # Headers importantes
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # Cache de arquivos estáticos
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+        proxy_pass http://backend_servers;
+        proxy_cache_valid 200 30d;
+        expires 30d;
+    }
+
+    # WebSocket support
+    location /ws {
+        proxy_pass http://backend_servers;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# Servidor HTTPS (opcional)
+server {
+    listen 443 ssl http2;
+    server_name exemplo.com;
+
+    ssl_certificate /etc/ssl/certs/cert.pem;
+    ssl_certificate_key /etc/ssl/private/key.pem;
+
+    location / {
+        proxy_pass http://backend_servers;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+}
+```
+
+## Comandos Essenciais
+
+```bash
+# Testar configuração
+sudo nginx -t
+
+# Recarregar configuração
+sudo systemctl reload nginx
+
+# Ativar site
+sudo ln -s /etc/nginx/sites-available/meu-app /etc/nginx/sites-enabled/
+
+# Ver status
+sudo systemctl status nginx
+```
+
+**Diretivas-chave:** `proxy_pass` (destino), `upstream` (pool de servidores), `proxy_set_header` (headers customizados), `proxy_cache` (cache).
