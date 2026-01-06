@@ -1,1 +1,6 @@
+Explique os conceitos inerentes a implementação de um proxy reverso implementado com o NGINX. 
 
+Descreva como funciona a configuração e arquivos envolvidos.
+Implemente uma solução de proxy reverso usando a maquina virtual ou o play with docker.
+Faça print dos arquivos envolvendo a descrição dos conceitos e os arquivos de configuração. 
+Faça print dos testes que demonstram o uso do Proxy reverso.
