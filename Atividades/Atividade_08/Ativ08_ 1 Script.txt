@@ -1,0 +1,205 @@
+mkdir -p proxy-reverso/nginx
+mkdir -p proxy-reverso/app1
+mkdir -p proxy-reverso/app2
+cd proxy-reverso
+
+----------------------------------------------
+
+
+cat > docker-compose.yml << 'EOF'
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: proxy_reverso
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app1
+      - app2
+    networks:
+      - proxy-network
+
+  app1:
+    build: ./app1
+    container_name: app1
+    networks:
+      - proxy-network
+
+  app2:
+    build: ./app2
+    container_name: app2
+    networks:
+      - proxy-network
+
+networks:
+  proxy-network:
+    driver: bridge
+EOF
+
+----------------------------------------------
+
+
+cat > nginx/nginx.conf << 'EOF'
+events {
+    worker_connections 1024;
+}
+
+http {
+    upstream app1_backend {
+        server app1:80;
+    }
+
+    upstream app2_backend {
+        server app2:80;
+    }
+
+    server {
+        listen 80;
+        server_name localhost;
+
+        location /app1 {
+            proxy_pass http://app1_backend/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        location /app2 {
+            proxy_pass http://app2_backend/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        location / {
+            return 200 '<html><body><h1>Proxy Reverso Nginx</h1><p>Acesse:</p><ul><li><a href="/app1">/app1</a></li><li><a href="/app2">/app2</a></li></ul></body></html>';
+            add_header Content-Type text/html;
+        }
+    }
+}
+EOF
+
+----------------------------------------------
+
+
+cat > app1/Dockerfile << 'EOF'
+FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/index.html
+EOF
+
+-----------------------------------------------
+
+
+
+cat > app1/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>App 1</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 50px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Aplicação 1</h1>
+        <p>Servidor Backend - App 1</p>
+        <p>Você está acessando através do Proxy Reverso!</p>
+    </div>
+</body>
+</html>
+EOF
+
+----------------------------------------------
+
+
+cat > app2/Dockerfile << 'EOF'
+FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/index.html
+EOF
+
+
+-----------------------------------------------
+
+
+cat > app2/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>App 2</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 50px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Aplicação 2</h1>
+        <p>Servidor Backend - App 2</p>
+        <p>Você está acessando através do Proxy Reverso!</p>
+    </div>
+</body>
+</html>
+EOF
+
+
+------------------------------
+
+
+
+ls -R
+
+docker-compose up -d
+docker-compose os
+
+curl http://localhost/
+curl http://localhost/app1
+curl http://localhost/app2
+
+docker logs proxy_reverso
+docker-compose logs -f
+docker-compose down
+docker-compose restart
+
+
+
+
+
+
+
+
+
+
